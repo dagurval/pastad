@@ -1,5 +1,3 @@
-#How to install pasta
-
 == Requirements ==
 
 Pasta depends on following modules from CPAN:
@@ -11,7 +9,7 @@ These need to be installed.
 
 == Installation ==
 
-Put the program into a directory where pl-scripts can be executed from apache. Make pastes directory writeable to everyone (chmod a+rwX pastes).
+Put the program into a directory where pl-scripts can be executed from apache. Make the _pastes_ directory writeable to everyone (chmod a+rwX pastes).
 
 Edit conf.pm to fit your needs.
 
