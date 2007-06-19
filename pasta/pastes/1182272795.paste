@@ -1,6 +1,0 @@
-<!-- {'filetype' => 'html','time' => 1182272795,'name' => 'Anonym kjøttbolle'} -->
-<ul id="top_nav">
-     <li><a href="index.pl">Send inn ny</a></li>
-     <li><a href="list.pl">Alle innsente</a></li>
-     <li><a href="view.pl?p=[% view_paste.time %]&amp;plain">Vis som ren tekst</a></li>
-</ul>

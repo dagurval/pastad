@@ -1,7 +1,0 @@
-<!-- {'filetype' => 'perl','time' => 1182277561,'name' => 'Anonym Kjøttbolle'} -->
-  8 $CONF{pastes_dir} = "pastes";
-  9 $CONF{list_size} = 100;
- 10 $CONF{default_anonymous} = "Anonym Kjøttbolle";
- 11 $CONF{vim_syntax_dir} = "/usr/share/vim/vimcurrent/syntax/";
- 12 $CONF{type_default} = "perl";
- 13 $CONF{using_rewrite} = 1;
