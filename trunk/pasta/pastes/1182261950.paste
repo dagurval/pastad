@@ -1,0 +1,9 @@
+<!-- {'filetype' => 'perl','time' => 1182261950,'name' => 'Anonym kjøttbolle'} -->
+   use Text::VimColor;
+   my $syntax = Text::VimColor->new(
+      file => $0,
+      filetype => 'perl',
+   );
+
+   print $syntax->html;
+   print $syntax->xml;
