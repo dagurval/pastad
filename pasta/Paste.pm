@@ -1,0 +1,136 @@
+package Paste;
+use strict;
+use warnings;
+
+use Carp;
+use Data::Dumper;
+use Exporter;
+use Time::Duration;
+our @ISA = qw(Exporter);
+our @EXPORT_OK = qw(get_paste_list store_paste read_paste);
+
+use conf;
+
+use constant NAME_MAX_LENGHT => 30;
+use constant FILETYPE_MAX_LENGHT => 10;
+
+sub get_paste_list {
+    my ($limit, $offset) = @_;
+
+    croak "get_paste_list takes 2 arguments" 
+	unless scalar @_ == 2;
+
+    my @pastes;
+    
+    opendir my $dirh, $CONF{pastes_dir} 
+	or die "Can't open paste dir $!";
+    
+    # Files are saved as 'unixtime.paste'
+    my @files = grep { /\.paste$/ } readdir($dirh);
+    @files = sort { $b cmp $a } @files;
+
+    for (my $i = $limit;
+	    $i < $limit + $offset; 
+	    $i++) {
+
+	last if ($i > (scalar @files - 1));
+   
+	my $head = _read_head("$CONF{pastes_dir}/$files[$i]");
+	my %meta = _parse_head($head);
+	$meta{time_ago} = ago(time() - $meta{time});
+	push @pastes, \%meta;
+    }
+
+    return @pastes;
+}
+
+sub store_paste {
+    my ($filetype, $name, $content) = @_;
+
+    croak "store_paste takes 3 arguments"
+	unless scalar @_ == 3;
+
+    $filetype = q{} unless $filetype;
+    $name = q{} unless $name;
+
+    if (length $filetype > FILETYPE_MAX_LENGHT) {
+	$filetype = substr $filetype, 0, FILETYPE_MAX_LENGHT;
+    }
+    if (length $name > NAME_MAX_LENGHT) {
+	$filetype = substr $name, 0, NAME_MAX_LENGHT;
+    }
+
+    my $time = time();
+
+    # Post in the feature on collision
+    while (-e "$CONF{pastes_dir}/$time.paste") {
+	$time++;
+    }
+
+    open my $fh, ">", "$CONF{pastes_dir}/$time.paste"
+	or croak "Unable to open paste file for writing, $!";
+
+    # write head
+    # Inspired by Kareha source (PD)
+    my %meta = ( 'filetype' => $filetype,
+		     'name' => $name,
+		     'time' => $time );
+    $Data::Dumper::Terse  = 1;
+    $Data::Dumper::Indent = 0;
+    print {$fh} "<!-- " . Dumper(\%meta) . " -->\n";
+    # ..then paste.
+    print {$fh} $content;
+    close $fh;
+
+    return $time;
+}
+
+sub read_paste {
+    my $paste_id = shift;
+
+    croak "Not a valid paste"
+	unless $paste_id =~ /^\d+$/;
+    
+    my $path = "$CONF{pastes_dir}/$paste_id.paste";
+
+    croak "Paste does not exist"
+	unless -f $path;
+
+    open my $pasteh, "<", $path
+	or croak "Unable to read paste, $!";
+
+    my %paste = _parse_head(scalar <$pasteh>);
+    my @content = <$pasteh>;
+    close $pasteh;
+
+    $paste{content} = join q{}, @content;
+
+    return %paste;
+    
+}
+
+sub _parse_head {
+    my $head = shift;
+
+    my ($code) = $head =~ /\<!--(.*)-->/;
+    my %data = %{eval $code};
+
+    $data{name} = $CONF{default_anonymous}
+	unless $data{name};
+
+    return %data;
+}
+
+sub _read_head {
+    my $file_path = shift;
+
+    open my $fh, "<", $file_path
+	or croak "Unable to open paste file $file_path, $!";
+
+    my $head = <$fh>;
+    close $fh;
+
+    return $head;
+}
+
+1;
