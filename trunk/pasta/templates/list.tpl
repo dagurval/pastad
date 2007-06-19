@@ -14,7 +14,7 @@
 		    [% ELSE %]"view.pl?p=[% time %]"
 		    [% END %]
 		><strong>[% HTML.escape(name) %]</strong></a>
-	<br /><span style="font-size: small;"><em>Syntaks: [% HTML.escape(filetype) %], sendt inn [% HTML.escape(time_ago) %]</em></div></li>
+	<br /><span style="font-size: small;"><em>Syntaks: [% HTML.escape(filetype) %], sent inn [% HTML.escape(time_ago) %]</em></div></li>
     [% color = 1 - color %]
 [% END  %]
 </ul>
