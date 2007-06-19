@@ -10,6 +10,6 @@ $CONF{list_size} = 100;
 $CONF{default_anonymous} = "Anonym Kjøttbolle";
 $CONF{vim_syntax_dir} = "/usr/share/vim/vimcurrent/syntax/";
 $CONF{type_default} = "perl";
-$CONF{using_rewrite} = 0;
+$CONF{using_rewrite} = 1;
 
 1;
