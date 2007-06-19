@@ -1,0 +1,36 @@
+#How to install pasta
+
+== Requirements ==
+
+Pasta depends on following modules from CPAN:
+  * [http://search.cpan.org/~avif/Time-Duration-1.04/Duration.pm Time::Duration]
+  * [http://search.cpan.org/~abw/Template-Toolkit-2.19/ Template Toolkit]
+  * [http://search.cpan.org/~geoffr/Text-VimColor-0.11/lib/Text/VimColor.pm Text::VimColor]
+
+These need to be installed.
+
+== Installation ==
+
+Put the program into a directory where pl-scripts can be executed from apache. Make pastes directory writeable to everyone (chmod a+rwX pastes).
+
+Edit conf.pm to fit your needs.
+
+== Example Apache2 config ==
+
+Following is the Apache2 VirtualHost clause I use to get the program running, with short paste urls:
+{{{
+<VirtualHost *>
+        DocumentRoot /home/dagur/www/pasta
+        ServerName pasta.dagur.com
+        Options +ExecCGI
+        ErrorLog /var/log/apache2/pasta.error.log
+        LogLevel warn
+        CustomLog /var/log/apache2/pasta.access.log combined
+        ServerSignature On
+        RewriteEngine on
+        RewriteCond %{REQUEST_FILENAME} !-f
+        RewriteCond %{REQUEST_FILENAME} !-d
+        RewriteRule ^(.*)p/(.*).css$ /$2.css [R]
+        RewriteRule ^(.*)p/(.*)$ /view.pl?p=$2 [L,QSA]
+</VirtualHost>
+}}}
