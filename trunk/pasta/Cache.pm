@@ -1,4 +1,3 @@
-#!/usr/bin/env perl
 # Copyright (c) 2007, Dagur Valberg Johannsson
 # All rights reserved.
 #
@@ -25,64 +24,72 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+##
+# Functions for caching HTML with highlighted code.
+package Cache;
+
 use strict;
 use warnings;
-
-use CGI;
-use Carp;
+use Exporter;
 use Data::Dumper;
-use Switch;
-use Cache;
+use Carp;
+
+our @ISA = qw(Exporter);
+our @EXPORT_OK = qw(cache_add is_cached cache_read cache_remove);
 
 use conf;
-use Paste qw(store_paste delete_paste);
-use Cache qw(is_cached cache_remove);
 
-my $do = CGI::param('do');
+sub cache_add {
+    my ($paste_id, $html) = @_;
 
-switch ($do)  {
-    case "post" {
-        if (CGI::param('content')) {
-            my $id;
-            eval {
-                $id = store_paste(
-                        CGI::param('filetype'), 
-                        CGI::param('name'),
-                        CGI::param('content'),
-                        CGI::param('passwd'));
-            };
-            if ($@) {
-                html_err("Unable to post: ", $@);
-            }
+    _validate_paste($paste_id);
+    croak "cache_add argument html is missing"
+        unless defined $html;
 
-            my $url = ($CONF{using_rewrite}) ? "/p/$id" : "view.pl?p=$id";
-            print CGI::redirect($url);
-        }
-        else {
-            html_err("There was no content in your paste. Try again.");
-        }
-    }
+    my $path = $CONF{cache_dir} . "/$paste_id.cache";
+    open my $fh, ">", $path
+        or carp "Unable to open cache file $path for writing, ", $!;
+    carp $@ unless eval { print {$fh} $html };
+    return ($@) ? 0 : 1;
+}
 
-    case "del" {
-        my ($id, $passwd) = (CGI::param('id'), CGI::param('passwd'));
-        eval { delete_paste($id, $passwd) };
-        cache_remove($id) if is_cached($id);
-        html_err($@) if ($@);
-
-        print CGI::header("text/html");
-        print "<html><body><h3>Post deleted.</h3></body></html>";
-    }
+sub is_cached {
+    my $paste_id = shift;
     
-    else {
-       html_err("Don't know what to do");
-    } 
+    my $path = $CONF{cache_dir} . "/$paste_id.cache";
+    
+    return unless -r $path;
+    1;
 }
 
-sub html_err {
-    my $err = join " ", @_;
-    print CGI::header(-type => "text/html", -charset => "utf-8");
-    print "<html><body><h3>Error: ", $err, "</h3></body></html>";
-    exit;
+sub cache_read {
+    my $paste_id = shift;
+    
+    _validate_paste($paste_id);
+    croak "Paste is not cached"
+        unless is_cached($paste_id);
+    
+    my $path = $CONF{cache_dir} . "/$paste_id.cache";
+    open my $cacheh, "<", $path
+        or croak "Unable to open cache file, ", $!;
+    my @contents = <$cacheh>;
+    return join q{}, @contents;
 }
+
+sub cache_remove {
+    my $paste_id = shift;
+    
+    _validate_paste($paste_id);
+    my $path = $CONF{cache_dir} . "/$paste_id.cache";
+
+    unless (is_cached($paste_id)) {
+        carp "Paste is not cached";
+        return;
+    }
+
+    return unlink $path;
+}
+
+sub _validate_paste { croak "Invalid paste" unless $_[0] =~ /^\d+$/ }
 
 1;
