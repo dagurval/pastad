@@ -111,7 +111,7 @@ sub store_paste {
     my %meta = ( 'filetype' => $filetype,
 		     'name' => $name,
 		     'time' => $time );
-    if (defined $passwd) {
+    if ($passwd) {
 	$meta{passwd} = crypt($passwd, $CONF{salt});
     }
     $Data::Dumper::Terse  = 1;
