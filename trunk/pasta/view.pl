@@ -37,7 +37,6 @@ use Data::Dumper;
 use Time::Duration;
 use conf;
 
-
 my $paste;
 unless (eval { $paste = +{ read_paste(CGI::param('p')) } } ) {
     print CGI::header("text/html");

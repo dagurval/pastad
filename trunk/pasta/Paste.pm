@@ -32,7 +32,7 @@ use Data::Dumper;
 use Exporter;
 use Time::Duration;
 our @ISA = qw(Exporter);
-our @EXPORT_OK = qw(get_paste_list store_paste read_paste);
+our @EXPORT_OK = qw(get_paste_list store_paste read_paste delete_paste);
 
 use conf;
 
@@ -43,7 +43,7 @@ sub get_paste_list {
     my ($limit, $offset) = @_;
 
     croak "get_paste_list takes 2 arguments" 
-	unless scalar @_ == 2;
+		unless scalar @_ == 2;
 
     my @pastes;
     
@@ -69,11 +69,22 @@ sub get_paste_list {
     return @pastes;
 }
 
+##
+# Stores a paste in a file.
+# 
+# Arguments:
+#   filetype - Filetype
+#   name     - User name
+#   content  - Paste contents
+#   passwd   - Paste password
+#
+# Returns:
+#   id - Paste id.
 sub store_paste {
-    my ($filetype, $name, $content) = @_;
+    my ($filetype, $name, $content, $passwd) = @_;
 
-    croak "store_paste takes 3 arguments"
-	unless scalar @_ == 3;
+    croak "missing argument. store_paste takes at least 3 arguments"
+	if scalar @_ < 3;
 
     $filetype = q{} unless $filetype;
     $name = q{} unless $name;
@@ -100,6 +111,9 @@ sub store_paste {
     my %meta = ( 'filetype' => $filetype,
 		     'name' => $name,
 		     'time' => $time );
+    if (defined $passwd) {
+	$meta{passwd} = crypt($passwd, $CONF{salt});
+    }
     $Data::Dumper::Terse  = 1;
     $Data::Dumper::Indent = 0;
     print {$fh} "<!-- " . Dumper(\%meta) . " -->\n";
@@ -113,13 +127,8 @@ sub store_paste {
 sub read_paste {
     my $paste_id = shift;
 
-    croak "Not a valid paste"
-	unless $paste_id =~ /^\d+$/;
-    
+    _validate_paste($paste_id);
     my $path = "$CONF{pastes_dir}/$paste_id.paste";
-
-    croak "Paste does not exist"
-	unless -f $path;
 
     open my $pasteh, "<", $path
 	or croak "Unable to read paste, $!";
@@ -134,6 +143,58 @@ sub read_paste {
     
 }
 
+##
+# Delete a paste.
+# 
+# Arguments:
+#   paste_id - Paste ID.
+#   passwd   - Paste password
+sub delete_paste {
+    my ($paste_id, $passwd) = @_;
+
+    croak "delete_paste takes 2 arguments"
+	unless scalar @_ == 2;
+
+    _validate_paste($paste_id);
+    my $path = "$CONF{pastes_dir}/$paste_id.paste";
+    my %meta = _parse_head( _read_head($path) );
+    
+    croak "Paste does not have a password set"
+	unless defined $meta{passwd};
+
+    my $passwd_hash = crypt($passwd, $CONF{salt});
+    croak "Incorrect password provided"
+	unless $passwd_hash eq $meta{passwd};
+    
+    unlink $path;
+
+    1;
+}
+
+##
+# Sanity check for a paste id.
+# Croaks on error.
+#
+# Arguments:
+#   paste_id - Paste ID.
+sub _validate_paste {
+    my $paste_id = shift;
+    
+    croak "Not a valid paste"
+	unless $paste_id =~ /^\d+$/;
+    
+    my $path = "$CONF{pastes_dir}/$paste_id.paste";
+    croak "Paste does not exist"
+	unless -f $path;
+
+    1;
+}
+
+##
+# Parse data in meta-data header.
+#
+# Arguments:
+#   head - Paste file head
 sub _parse_head {
     my $head = shift;
 

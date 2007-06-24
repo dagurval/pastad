@@ -49,3 +49,12 @@ A:active { color: #F00;  }
 .nav A {
     color : #2357f4;
 }
+
+#postOptions {
+    list-style-type : none;
+    padding-left : 0;
+}
+#postOptions li {
+    display : inline;
+    margin-right : 2em;
+}

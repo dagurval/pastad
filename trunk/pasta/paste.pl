@@ -31,27 +31,48 @@ use warnings;
 use CGI;
 use Carp;
 use Data::Dumper;
+use Switch;
 
 use conf;
-use Paste qw(store_paste);
+use Paste qw(store_paste delete_paste);
 
-if (CGI::param('content')) {
-    my $id;
-    eval {
-	$id = store_paste(
-		CGI::param('filetype'), 
-		CGI::param('name'),
-		CGI::param('content'));
-    };
-    if ($@) {
-	html_err("Unable to post: ", $@);
+my $do = CGI::param('do');
+
+switch ($do)  {
+    case "post" {
+        if (CGI::param('content')) {
+            my $id;
+            eval {
+                $id = store_paste(
+                        CGI::param('filetype'), 
+                        CGI::param('name'),
+                        CGI::param('content'),
+                        CGI::param('passwd'));
+            };
+            if ($@) {
+                html_err("Unable to post: ", $@);
+            }
+
+            my $url = ($CONF{using_rewrite}) ? "/p/$id" : "view.pl?p=$id";
+            print CGI::redirect($url);
+        }
+        else {
+            html_err("There was no content in your paste. Try again.");
+        }
+    }
+
+    case "del" {
+        my ($id, $passwd) = (CGI::param('id'), CGI::param('passwd'));
+        eval { delete_paste($id, $passwd) };
+        html_err($@) if ($@);
+
+        print CGI::header("text/html");
+        print "<html><body><h3>Post deleted.</h3></body></html>";
     }
     
-    my $url = ($CONF{using_rewrite}) ? "/p/$id" : "view.pl?p=$id";
-    print CGI::redirect($url);
-}
-else {
-    html_err("There was no content in your paste. Try again.");
+    else {
+       html_err("Don't know what to do");
+    } 
 }
 
 sub html_err {
