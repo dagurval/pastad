@@ -31,7 +31,6 @@ use warnings;
 use CGI;
 use Carp;
 use Data::Dumper;
-use Switch;
 use Cache;
 
 use conf;
@@ -40,30 +39,29 @@ use Cache qw(is_cached cache_remove);
 
 my $do = CGI::param('do');
 
-switch ($do)  {
-    case "post" {
-        if (CGI::param('content')) {
-            my $id;
-            eval {
-                $id = store_paste(
-                        CGI::param('filetype'), 
-                        CGI::param('name'),
-                        CGI::param('content'),
-                        CGI::param('passwd'));
-            };
-            if ($@) {
-                html_err("Unable to post: ", $@);
-            }
+if ($do eq "post") {
+    if (CGI::param('content')) {
+        my $id;
+        eval {
+            $id = store_paste(
+                    CGI::param('filetype'), 
+                    CGI::param('name'),
+                    CGI::param('content'),
+                    CGI::param('passwd'));
+        };
+        if ($@) {
+            html_err("Unable to post: ", $@);
+        }
 
-            my $url = ($CONF{using_rewrite}) ? "/p/$id" : "view.pl?p=$id";
-            print CGI::redirect($url);
-        }
-        else {
-            html_err("There was no content in your paste. Try again.");
-        }
+        my $url = ($CONF{using_rewrite}) ? "/p/$id" : "view.pl?p=$id";
+        print CGI::redirect($url);
     }
+    else {
+        html_err("There was no content in your paste. Try again.");
+    }
+}
 
-    case "del" {
+elsif ($do eq "del") {
         my ($id, $passwd) = (CGI::param('id'), CGI::param('passwd'));
         eval { delete_paste($id, $passwd) };
         cache_remove($id) if is_cached($id);
@@ -71,11 +69,10 @@ switch ($do)  {
 
         print CGI::header("text/html");
         print "<html><body><h3>Post deleted.</h3></body></html>";
-    }
+}
     
-    else {
-       html_err("Don't know what to do");
-    } 
+else {
+    html_err("Don't know what to do");
 }
 
 sub html_err {
