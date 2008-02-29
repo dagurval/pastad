@@ -4,7 +4,9 @@
     'java',
     'perl'
     'php',
-    'sh' ] %]
+    'sh',
+    'py',
+    'js'] %]
 
     <form action="paste.pl" method="post">
 <p>   
@@ -31,7 +33,7 @@
 </p>
     <textarea style="width : 600px; height : 400px;" name="content"></textarea><br />
     </p>
-    Ditt navn: <br /><input type="text" value="[% default_anonymous %]" 
+    Tittel: <br /><input type="text" value="[% default_anonymous %]" 
 	name="name" onclick="if (this.value == this.defaultValue) this.value = '';" /> 
 
     <input type="submit" value="Send inn" style="font-size : large; background : #edf4fb"  />

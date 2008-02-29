@@ -8,7 +8,7 @@ our %CONF;
 $CONF{pastes_dir} = "pastes";
 $CONF{cache_dir} = "cache";
 $CONF{list_size} = 100;
-$CONF{default_anonymous} = "Anonym Kjøttbolle";
+$CONF{default_anonymous} = "Kjøttbolle";
 $CONF{vim_syntax_dir} = "/usr/share/vim/vimcurrent/syntax/";
 $CONF{type_default} = "none";
 $CONF{using_rewrite} = 1;
